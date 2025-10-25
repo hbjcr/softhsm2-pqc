@@ -15,6 +15,7 @@ SHELL ["/bin/ash", "-euo", "pipefail", "-c"]
 
 ARG GIT_REPO
 ARG GIT_BRANCH
+ARG PKCS11_CLIENT_REPO
 
 # https://github.com/hadolint/hadolint/wiki/DL3018 Pin versions
 # hadolint ignore=DL3018
@@ -42,6 +43,7 @@ RUN --mount=type=bind,source=../src,target=/mnt/shared <<EOF
     bash \
     cmake \
     git \
+    go \
     libseccomp-dev
 
 EOF
@@ -54,6 +56,7 @@ RUN <<EOF
   echo "#################################################"
   echo "Downloading [$GIT_REPO]..."
   git clone -b "$GIT_BRANCH" --depth 1 "$GIT_REPO"
+  git clone --depth 1 "$PKCS11_CLIENT_REPO" /tmp/pkcs11-mldsa
   mv SoftHSMv2* softhsm2
 
   cd softhsm2
@@ -62,7 +65,6 @@ RUN <<EOF
   make
   make install
   softhsm2-util --version
-
 EOF
 
 
@@ -109,8 +111,11 @@ COPY --from=builder /usr/local/bin/softhsm* /usr/local/bin/
 COPY --from=builder /usr/local/lib/softhsm/libsofthsm2.so /usr/local/lib/softhsm/libsofthsm2.so
 COPY --from=builder /usr/local/share/man/man1/softhsm* /usr/local/share/man/man1/
 COPY --from=builder /usr/local/share/man/man5/softhsm* /usr/local/share/man/man5/
+COPY --from=builder /tmp/pkcs11-mldsa/src/ /tmp/pkcs11-mldsa/
 
 COPY ../src/bash-init.sh /opt/bash-init.sh
+COPY ../src/run.sh /opt/run.sh
+COPY ../src/init-token.sh /opt/init-token.sh
 
 # Default configuration: can be overridden at the docker command line
 ENV \

@@ -12,6 +12,7 @@ platforms="linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/
 #platforms="linux/amd64"
 dockerfile="softhsm.Dockerfile"
 builder_name="SoftHSM2builder"
+pkcs11_client_repo="https://github.com/kingcdavid/pkcs11-mldsa.git"
 
 # Output image properties
 image_repo=${FINAL_IMAGE_REPO:-hbjcr/softhsm2-pqc:latest}
@@ -35,8 +36,8 @@ if ! run_step "Remove any previous builder instance" -- \
   warning_box "Builder '$builder_name' could not be removed — continuing..."
 fi
 
-    #--driver-opt env.http_proxy=http://proxy-chain.intel.com:911 \
-    #--driver-opt env.https_proxy=http://proxy-chain.intel.com:912 \
+    #--driver-opt env.http_proxy=http://proxy.domain.com:80 \
+    #--driver-opt env.https_proxy=https://proxy.domain.com:443 \
 run_step "Create builder instance" -- \
   docker buildx create --use --name "$builder_name" \
     --driver docker-container 
@@ -54,11 +55,10 @@ build_opts=(
   --build-arg BASE_IMAGE="$base_image"
   --build-arg GIT_REPO="$git_repo"
   --build-arg GIT_BRANCH="$git_branch"
+  --build-arg PKCS11_CLIENT_REPO="$pkcs11_client_repo"
   --platform "$platforms"
   --sbom=true  # https://docs.docker.com/build/metadata/attestations/sbom/#create-sbom-attestations
   --push
-  #--output=type=docker
-  #--output "type=registry,name=${LOCAL_REGISTRY}/${image_repo},registry.http=true,registry.insecure=true")
 )
 
 for key in "${!image_meta[@]}"; do
