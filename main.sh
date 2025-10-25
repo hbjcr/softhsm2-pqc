@@ -9,6 +9,6 @@ export BASE_IMAGE='alpine:latest'
 export SOFTHSM_SOURCE_REPO='https://github.com/antoinelochet/SoftHSMv2.git'
 export SOFTHSM_SOURCE_REPO_BRANCH='ml-kem'
 
-#./01.prerequisites.sh
+./01.prerequisites.sh
 
 ./02.buildimages.sh
